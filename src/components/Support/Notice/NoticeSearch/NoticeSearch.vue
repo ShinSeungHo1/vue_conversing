@@ -1,40 +1,44 @@
 <script setup>
-import { ref } from 'vue';
-import NoticeModal from '../NoticeModal/NoticeModal.vue';
+import router from '@/router';
+import { useModalState } from '@/stores/modalState';
+import { onMounted, ref } from 'vue';
 
-// 검색 기능
-const title = ref('');
-const startDate = ref();
-const endDate = ref();
+const searchTitle = ref('');
+const searchStDate = ref('');
+const searchEdDate = ref('');
 
-const emit = defineEmits('search');
+const modalState = useModalState();
 
+// 검색 버튼을 클릭시 데이터를 queryParam에 들어가게끔 하는 함수
 const handlerSearch = () => {
-  const searchData = {
-    title: title.value || '',
-    startDate: startDate.value || '',
-    endDate: endDate.value || '',
-  };
+  const query = [];
 
-  emit('search', searchData);
+  //1. searchTitle의 값이 있을 경우, 쿼리라는 array에 담아 두겠다.
+  !searchTitle.value || query.push(`title=${searchTitle.value}`);
+  !searchStDate.value || query.push(`startDate=${searchStDate.value}`);
+  !searchEdDate.value || query.push(`endDate=${searchEdDate.value}`);
+
+  const queryString = query.length > 0 ? `?${query.join('&')}` : '';
+
+  router.push(queryString);
 };
 
-//등록 모달 띄우기
-const flag = ref(false);
+onMounted(() => {
+  // console.log(window.location);
+  window.location.search && router.replace(window.location.pathname);
+});
 </script>
 
 <template>
   <div class="notice-container">
     <div class="input-box">
-      제목: <input v-model.lazy="title" />
-      <input v-model="startDate" type="date" />
-      <input v-model="endDate" type="date" />
+      제목: <input v-model.lazy="searchTitle" />
+      <input v-model="searchStDate" type="date" />
+      <input v-model="searchEdDate" type="date" />
       <button @click="handlerSearch">검색</button>
-      <button @click="flag = !flag">등록</button>
+      <button @click="modalState.$patch({ isOpen: true })">등록</button>
     </div>
   </div>
-
-  <NoticeModal v-if="flag" />
 </template>
 
 <!-- style scoped는 해당 컴포넌트에서만 스타일을 적용시키는 방법이다.

@@ -1,43 +1,52 @@
 <script setup>
 import axios from 'axios';
-import { onMounted, ref } from 'vue';
-// 반응형 데이터
+import { onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import { ref } from 'vue';
+import PageNavigation from '@/components/common/PageNavigation.vue';
+import NoticeModal from '../NoticeModal/NoticeModal.vue';
+import { useModalState } from '@/stores/modalState';
+
+const route = useRoute();
 const noticeList = ref([]);
+const noticeCount = ref(0);
+const modalState = useModalState();
+const detailId = ref(0);
 
-//페이징 데이터
-const currentPage = ref(1);
-const pageSize = ref(5);
-
-// 검색했을 때 데이터 받기
-const searchDatas = ref({
-  title: '',
-  startDate: '',
-  endDate: '',
-});
-
-const fetchNoticeList = () => {
+const noticeSearch = (cPage = 1) => {
   const params = {
-    title: searchDatas.value.title || '',
-    startDate: searchDatas.value.startDate || '',
-    endDate: searchDatas.value.endDate || '',
-    currentPage: currentPage.value.toString(),
-    pageSize: pageSize.value.toString(),
+    currentPage: cPage,
+    pageSize: 5,
+    ...route.query,
   };
 
-  const urlParams = new URLSearchParams(params);
-  axios
-    .post(`/api/support/noticeListBody.do`, urlParams)
-    .then((res) => {
-      noticeList.value = res.data.list || [];
-    })
-    .catch((err) => {
-      console.error(err);
-      noticeList.value = [];
-    });
+  const param = new URLSearchParams(params);
+
+  axios.post('/api/support/noticeListBody.do', param).then((res) => {
+    noticeList.value = res.data.list;
+    noticeCount.value = res.data.count;
+  });
 };
 
+const noticeDetail = (noticeId) => {
+  // modalState.$patch({ payload: noticeId });
+  modalState.$patch({ isOpen: true });
+  // modalState.$patch({ type: 'UPDATE' });
+  detailId.value = noticeId;
+};
+
+// watch(값, 콜백)
+watch(
+  () => {
+    return route.query;
+  },
+  () => {
+    noticeSearch();
+  },
+);
+
 onMounted(() => {
-  fetchNoticeList();
+  noticeSearch();
 });
 </script>
 
@@ -54,18 +63,34 @@ onMounted(() => {
         </tr>
       </thead>
       <tbody>
-        <tr v-if="noticeList.length === 0">
-          <td colspan="4" class="notice-empty-row">일치하는 검색 결과가 없습니다</td>
-        </tr>
-        <tr v-for="notice in noticeList" v-else :key="notice.noticeId" class="notice-table-row">
-          <td>{{ notice.noticeId }}</td>
-          <td>{{ notice.noticeTitle }}</td>
-          <td>{{ notice.regDate }}</td>
-          <td>{{ notice.loginId }}</td>
-        </tr>
+        <template v-if="noticeCount > 0">
+          <tr v-for="notice in noticeList" :key="notice.noticeId" class="notice-table-row">
+            <td class="notice-cell">{{ notice.noticeId }}</td>
+            <td
+              class="notice-cell cursor-pointer hover:underline"
+              @click="noticeDetail(notice.noticeId)"
+            >
+              {{ notice.noticeTitle }}
+            </td>
+            <td class="notice-cell">{{ notice.regDate.substr(0, 10) }}</td>
+            <td class="notice-cell">{{ notice.loginId }}</td>
+          </tr>
+        </template>
+        <template v-else>
+          <tr>
+            <td colspan="4" class="notice-empty-row">일치하는 검색 결과가 없습니다</td>
+          </tr>
+        </template>
       </tbody>
     </table>
+    <PageNavigation :total-items="noticeCount" :items-per-page="5" :on-page-change="noticeSearch" />
   </div>
+  <NoticeModal
+    v-if="modalState.isOpen"
+    :detail-id="detailId"
+    @post-success="noticeSearch"
+    @un-mounted-modal="detailId = $event"
+  />
 </template>
 
 <style>
