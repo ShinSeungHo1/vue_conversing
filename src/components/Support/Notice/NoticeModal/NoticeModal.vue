@@ -30,7 +30,7 @@ const handlerUpdate = () => {
   const formData = new FormData(formRef.value);
   formData.append('noticeId', id);
 
-  axios.post('/api/support/noticeUpdate.do', formData).then((res) => {
+  axios.post('/api/support/noticeFileUpdate.do', formData).then((res) => {
     if (res.data.result === 'success') {
       alert('수정되었습니다');
       modalState.$patch({ isOpen: false });
@@ -78,12 +78,28 @@ const deleteNotice = () => {
   const param = new URLSearchParams();
   param.append('noticeId', id);
 
-  axios.post('/api/support/noticeDelete.do', param).then((res) => {
+  axios.post('/api/support/noticeFileDelete.do', param).then((res) => {
     if (res.data.result === 'success') {
       alert('삭제가 완료되었습니다.');
       modalState.$patch({ isOpen: false });
       emit('postSuccess');
     }
+  });
+};
+
+const downloadFile = () => {
+  const param = new URLSearchParams();
+  param.append('noticeId', id);
+  axios.post('/api/support/noticeDownload.do', param, { responseType: 'blob' }).then((res) => {
+    // const url = window.URL.createObjectURL(new Blob([res.data]));
+    const url = window.URL.createObjectURL(res.data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', detail.value.fileName);
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
   });
 };
 
@@ -108,10 +124,10 @@ onUnmounted(() => {
       파일 :
       <input id="fileInput" type="file" name="file" @change="handlerFile" />
       <label class="img-label" htmlFor="fileInput"> 파일 첨부하기 </label>
-      <div>
+      <div @click="downloadFile">
         <div>
           <label>미리보기</label>
-          <img :src="imageUrl" class="preview-image" />
+          <img :src="imageUrl" class="preview-image cursor-pointer" />
         </div>
       </div>
       <div class="button-container">

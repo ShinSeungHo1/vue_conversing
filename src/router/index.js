@@ -4,6 +4,7 @@ import NotFound from '@/views/NotFound/NotFound.vue';
 import Notice from '@/views/Support/Notice.vue';
 import List from '@/views/Lecture/List.vue';
 import { createRouter, createWebHistory } from 'vue-router';
+import Test from '@/views/Test.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -41,6 +42,11 @@ const router = createRouter({
               path: 'list',
               name: 'list',
               component: List,
+            },
+            {
+              path: 'test-info',
+              name: 'test',
+              component: Test,
             },
           ],
         },
