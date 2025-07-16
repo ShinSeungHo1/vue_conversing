@@ -1,22 +1,19 @@
 <script setup>
 import router from '@/router';
-import { useModalState } from '@/stores/modalState';
 import { onMounted, ref } from 'vue';
 
 const searchTitle = ref('');
 const searchStDate = ref('');
 const searchEdDate = ref('');
+const searchTag = ref('lecName');
 
-const modalState = useModalState();
-
-// 검색 버튼을 클릭시 데이터를 queryParam에 들어가게끔 하는 함수
 const handlerSearch = () => {
   const query = [];
 
-  //1. searchTitle의 값이 있을 경우, 쿼리라는 array에 담아 두겠다.
-  !searchTitle.value || query.push(`title=${searchTitle.value}`);
-  !searchStDate.value || query.push(`startDate=${searchStDate.value}`);
-  !searchEdDate.value || query.push(`endDate=${searchEdDate.value}`);
+  !searchTitle.value || query.push(`searchTitle=${searchTitle.value}`);
+  !searchStDate.value || query.push(`searchStDate=${searchStDate.value}`);
+  !searchEdDate.value || query.push(`searchEdDate=${searchEdDate.value}`);
+  !searchTag.value || query.push(`searchTag=${searchTag.value}`);
 
   const queryString = query.length > 0 ? `?${query.join('&')}` : '';
 
@@ -24,7 +21,7 @@ const handlerSearch = () => {
 };
 
 onMounted(() => {
-  // console.log(window.location);
+  //   console.log(window.location);
   window.location.search && router.replace(window.location.pathname);
 });
 </script>
@@ -32,11 +29,16 @@ onMounted(() => {
 <template>
   <div class="lecture-container">
     <div class="input-box">
-      제목: <input v-model.lazy="searchTitle" />
+      <select v-model="searchTag">
+        <option value="lecName">강의명</option>
+        <option value="lecInstructorName">강사명</option>
+        <option value="lecRoomName">강의실</option>
+      </select>
+      <input v-model.lazy="searchTitle" />
+      강의기간
       <input v-model="searchStDate" type="date" />
       <input v-model="searchEdDate" type="date" />
       <button @click="handlerSearch">검색</button>
-      <button @click="modalState.$patch({ isOpen: true })">등록</button>
     </div>
   </div>
 </template>
@@ -47,6 +49,6 @@ onMounted(() => {
 
     scoped을 사용하지 않고, css파일을 import 하거나, <style scoped> 안에 css를 구성해야한다.
 -->
-<style scoped>
+<style>
 @import './styled.css';
 </style>

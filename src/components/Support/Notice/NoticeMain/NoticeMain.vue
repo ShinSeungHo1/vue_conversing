@@ -72,7 +72,7 @@ onMounted(() => {
             >
               {{ notice.noticeTitle }}
             </td>
-            <td class="notice-cell">{{ notice.regDate.substr(0, 10) }}</td>
+            <td class="notice-cell">{{ notice.regDate?.substring(0, 10) }}</td>
             <td class="notice-cell">{{ notice.loginId }}</td>
           </tr>
         </template>
@@ -93,6 +93,6 @@ onMounted(() => {
   />
 </template>
 
-<style>
+<style scoped>
 @import './styled.css';
 </style>
